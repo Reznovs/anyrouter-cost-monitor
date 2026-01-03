@@ -3,6 +3,5 @@
     "username": "your_username",
     "password": "your_password",
     "refresh_interval": 240,
-    "total_duration": 7200,
-    "use_proxy": false
+    "total_duration": 7200
 }

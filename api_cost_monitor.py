@@ -48,10 +48,46 @@ def load_config():
 
 def generate_acw_sc_v2(arg1):
     m = [
-        0xF, 0x23, 0x1D, 0x18, 0x21, 0x10, 0x1, 0x26, 0xA, 0x9,
-        0x13, 0x1F, 0x28, 0x1B, 0x16, 0x17, 0x19, 0xD, 0x6, 0xB,
-        0x27, 0x12, 0x14, 0x8, 0xE, 0x15, 0x20, 0x1A, 0x2, 0x1E,
-        0x7, 0x4, 0x11, 0x5, 0x3, 0x1C, 0x22, 0x25, 0xC, 0x24,
+        0xF,
+        0x23,
+        0x1D,
+        0x18,
+        0x21,
+        0x10,
+        0x1,
+        0x26,
+        0xA,
+        0x9,
+        0x13,
+        0x1F,
+        0x28,
+        0x1B,
+        0x16,
+        0x17,
+        0x19,
+        0xD,
+        0x6,
+        0xB,
+        0x27,
+        0x12,
+        0x14,
+        0x8,
+        0xE,
+        0x15,
+        0x20,
+        0x1A,
+        0x2,
+        0x1E,
+        0x7,
+        0x4,
+        0x11,
+        0x5,
+        0x3,
+        0x1C,
+        0x22,
+        0x25,
+        0xC,
+        0x24,
     ]
     p = "3000176000856006061501533003690027800375"
     q = [""] * len(m)
@@ -67,7 +103,7 @@ def generate_acw_sc_v2(arg1):
     return v
 
 
-def get_session_with_retry(use_proxy=False):
+def get_session_with_retry():
     """创建带重试机制的session"""
     session = requests.Session()
 
@@ -76,33 +112,26 @@ def get_session_with_retry(use_proxy=False):
         total=5,  # 总共重试5次
         backoff_factor=1,  # 重试间隔:1s, 2s, 4s, 8s, 16s
         status_forcelist=[429, 500, 502, 503, 504],  # 这些状态码会触发重试
-        allowed_methods=["HEAD", "GET", "OPTIONS", "POST"]  # 允许重试的方法
+        allowed_methods=["HEAD", "GET", "OPTIONS", "POST"],  # 允许重试的方法
     )
 
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
 
-    # 配置代理
-    if use_proxy:
-        session.proxies = {
-            'http': 'http://127.0.0.1:10808',
-            'https': 'http://127.0.0.1:10808'
-        }
-
     return session
 
 
 def clear_terminal():
-    if os.name == 'nt':
-        os.system('cls')
+    if os.name == "nt":
+        os.system("cls")
     else:
-        print('\033[2J\033[H', end='')
+        print("\033[2J\033[H", end="")
 
 
-def get_tokens(username, password, use_proxy=False):
+def get_tokens(username, password):
     url = "https://anyrouter.top/api/user/login"
-    session = get_session_with_retry(use_proxy)
+    session = get_session_with_retry()
 
     try:
         resp1 = session.get(url, timeout=30)
@@ -117,7 +146,7 @@ def get_tokens(username, password, use_proxy=False):
         login_resp = session.post(
             f"{url}?turnstile=",
             json={"username": username, "password": password},
-            timeout=30
+            timeout=30,
         )
         session_cookie = session.cookies.get("session")
 
@@ -138,7 +167,7 @@ def get_tokens(username, password, use_proxy=False):
         return None, None, None, None
 
 
-def get_total_cost(acw_sc_v2, session_cookie, user_id, start_timestamp, end_timestamp, use_proxy=False):
+def get_total_cost(acw_sc_v2, session_cookie, user_id, start_timestamp, end_timestamp):
     API_URL = "https://anyrouter.top/api/log/self/stat"
     cookie_str = f"acw_sc__v2={acw_sc_v2}; session={session_cookie}"
 
@@ -160,10 +189,16 @@ def get_total_cost(acw_sc_v2, session_cookie, user_id, start_timestamp, end_time
         "group": "",
     }
 
-    session = get_session_with_retry(use_proxy)
+    session = get_session_with_retry()
 
     try:
         response = session.get(API_URL, headers=HEADERS, params=params, timeout=30)
+
+        # 调试信息:输出HTTP状态码
+        if response.status_code != 200:
+            print(f"[调试] HTTP状态码: {response.status_code}")
+            print(f"[调试] 响应内容(前500字符): {response.text[:500]}")
+
         data = response.json()
 
         if data.get("success"):
@@ -177,6 +212,8 @@ def get_total_cost(acw_sc_v2, session_cookie, user_id, start_timestamp, end_time
         return None
     except (ValueError, KeyError) as e:
         print(f"获取总消耗失败(解析错误): {e}")
+        print(f"[调试] 响应状态码: {response.status_code}")
+        print(f"[调试] 响应内容(前500字符): {response.text[:500]}")
         return None
 
 
@@ -210,7 +247,7 @@ def draw_progress_bar(model_quotas, total_quota, bar_width=50):
     print(bar)
 
 
-def get_model_stats(acw_sc_v2, session_cookie, user_id, start_timestamp, end_timestamp, use_proxy=False):
+def get_model_stats(acw_sc_v2, session_cookie, user_id, start_timestamp, end_timestamp):
     API_URL = "https://anyrouter.top/api/log/self"
     cookie_str = f"acw_sc__v2={acw_sc_v2}; session={session_cookie}"
 
@@ -227,7 +264,7 @@ def get_model_stats(acw_sc_v2, session_cookie, user_id, start_timestamp, end_tim
     page = 1
     page_size = 100
 
-    session = get_session_with_retry(use_proxy)
+    session = get_session_with_retry()
 
     try:
         while True:
@@ -243,6 +280,12 @@ def get_model_stats(acw_sc_v2, session_cookie, user_id, start_timestamp, end_tim
             }
 
             response = session.get(API_URL, headers=HEADERS, params=params, timeout=30)
+
+            # 调试信息:输出HTTP状态码
+            if response.status_code != 200:
+                print(f"[调试] 页{page} HTTP状态码: {response.status_code}")
+                print(f"[调试] 响应内容(前500字符): {response.text[:500]}")
+
             data = response.json()
 
             if not data.get("success"):
@@ -272,6 +315,8 @@ def get_model_stats(acw_sc_v2, session_cookie, user_id, start_timestamp, end_tim
         print(f"获取模型统计失败(网络错误) - 页{page}: {e}")
     except (ValueError, KeyError) as e:
         print(f"获取模型统计失败(解析错误) - 页{page}: {e}")
+        print(f"[调试] 响应状态码: {response.status_code}")
+        print(f"[调试] 响应内容(前500字符): {response.text[:500]}")
 
     return model_quotas
 
@@ -306,23 +351,31 @@ if __name__ == "__main__":
     password = config["password"]
     REFRESH_INTERVAL = config.get("refresh_interval", 240)
     TOTAL_DURATION = config.get("total_duration", 7200)
-    USE_PROXY = config.get("use_proxy", False)
 
-    print("正在登录...")
-    acw_sc_v2, session, user_id, display_name = get_tokens(username, password, USE_PROXY)
-
-    if not (acw_sc_v2 and session and user_id and display_name):
-        print("登录失败,无法获取token或用户ID")
-        print("提示: 如果网络连接失败,可以在 config.json 中设置 \"use_proxy\": true")
-        exit(1)
-
-    print(f"登录成功! 用户: {display_name}")
-    time.sleep(2)
+    print("=" * 60)
+    print("AnyRouter API 成本监控")
+    print("=" * 60)
 
     start_time = time.time()
 
     while True:
-        clear_terminal()
+        # 每次刷新前重新登录获取新的 Cookie
+        print("\n正在登录...")
+        acw_sc_v2, session_cookie, user_id, display_name = get_tokens(
+            username, password
+        )
+
+        if not (acw_sc_v2 and session_cookie and user_id and display_name):
+            print("\n登录失败,无法获取token或用户ID")
+            print("\n可能的原因:")
+            print("1. 用户名或密码错误")
+            print("2. 网络连接失败 - 检查是否能访问 https://anyrouter.top")
+            print("3. 阿里云CDN防护策略更新 - arg1映射表可能已变更")
+            print("\n将在30秒后重试...")
+            time.sleep(30)
+            continue
+
+        print(f"登录成功! 用户: {display_name}")
 
         elapsed_time = time.time() - start_time
         if elapsed_time >= TOTAL_DURATION:
@@ -334,13 +387,17 @@ if __name__ == "__main__":
         start_timestamp = int(today.timestamp())
         end_timestamp = int(time.time())
 
+        # 先请求获取数据
         total_cost = get_total_cost(
-            acw_sc_v2, session, user_id, start_timestamp, end_timestamp, USE_PROXY
+            acw_sc_v2, session_cookie, user_id, start_timestamp, end_timestamp
         )
 
         model_quotas = get_model_stats(
-            acw_sc_v2, session, user_id, start_timestamp, end_timestamp, USE_PROXY
+            acw_sc_v2, session_cookie, user_id, start_timestamp, end_timestamp
         )
+
+        # 数据获取完成后再清屏并立即打印
+        clear_terminal()
 
         print("=" * 60)
         print(f"[Username] {display_name}")
@@ -354,8 +411,8 @@ if __name__ == "__main__":
 
         display_stats(model_quotas)
 
-        print("\n" + "=" * 60)
-        print(f"下次刷新: {REFRESH_INTERVAL}秒后")
+        # print("\n" + "=" * 60)
+        # print(f"下次刷新: {REFRESH_INTERVAL}秒后")
 
         try:
             time.sleep(REFRESH_INTERVAL)
