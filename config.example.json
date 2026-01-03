@@ -1,0 +1,7 @@
+{
+    "_comment": "配置说明: 复制此文件为 config.json 并填写你的账号信息",
+    "username": "your_username",
+    "password": "your_password",
+    "refresh_interval": 240,
+    "total_duration": 7200
+}
