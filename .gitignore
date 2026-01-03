@@ -21,3 +21,5 @@ __pycache__/
 Thumbs.db
 
 CLAUDE.md
+
+.gitignore
