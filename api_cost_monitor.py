@@ -357,10 +357,13 @@ if __name__ == "__main__":
     print("=" * 60)
 
     start_time = time.time()
+    is_first_run = True  # 标记是否首次运行
 
     while True:
         # 每次刷新前重新登录获取新的 Cookie
-        print("\n正在登录...")
+        if is_first_run:
+            print("\n正在登录...")
+
         acw_sc_v2, session_cookie, user_id, display_name = get_tokens(
             username, password
         )
@@ -375,7 +378,9 @@ if __name__ == "__main__":
             time.sleep(30)
             continue
 
-        print(f"登录成功! 用户: {display_name}")
+        if is_first_run:
+            print(f"登录成功! 用户: {display_name}")
+            is_first_run = False
 
         elapsed_time = time.time() - start_time
         if elapsed_time >= TOTAL_DURATION:
@@ -399,10 +404,10 @@ if __name__ == "__main__":
         # 数据获取完成后再清屏并立即打印
         clear_terminal()
 
-        print("=" * 60)
+        print("=" * 50)
         print(f"[Username] {display_name}")
         print(f"[Time] {current_time}")
-        print("-" * 60)
+        print("-" * 50)
 
         if total_cost:
             print(f"总消耗: {total_cost}")
@@ -411,8 +416,8 @@ if __name__ == "__main__":
 
         display_stats(model_quotas)
 
-        # print("\n" + "=" * 60)
-        # print(f"下次刷新: {REFRESH_INTERVAL}秒后")
+        print("\n" + "=" * 50)
+        print(f"刷新:{REFRESH_INTERVAL}s")
 
         try:
             time.sleep(REFRESH_INTERVAL)
