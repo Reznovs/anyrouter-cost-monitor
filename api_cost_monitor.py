@@ -233,12 +233,19 @@ def draw_progress_bar(model_quotas, total_quota, bar_width=50):
     models = ["haiku", "sonnet", "opus"]
     current_length = 0
 
+    # 找到最后一个有消耗的模型索引
+    last_active_idx = -1
+    for i, model in enumerate(models):
+        if model_quotas[model] > 0:
+            last_active_idx = i
+
     for i, model in enumerate(models):
         quota = model_quotas[model]
         ratio = quota / total_quota
         block_count = int(ratio * bar_width)
 
-        if i == len(models) - 1:
+        # 最后一个有消耗的模型补齐剩余格子
+        if i == last_active_idx:
             block_count = bar_width - current_length
 
         bar += colors[model] + "█" * block_count + reset
