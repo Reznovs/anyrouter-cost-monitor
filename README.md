@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 3. **配置账号**
 
-复制示例配置文件并编辑：
+- 复制示例配置文件并编辑：
 
 ```bash
 # Windows
@@ -48,7 +48,7 @@ copy config.example.json config.json
 cp config.example.json config.json
 ```
 
-编辑 `config.json`，填写你的 AnyRouter 账号密码：
+- 完成上一步后，编辑 `config.json`，填写你的 AnyRouter 账号密码：
 
 ```json
 {
@@ -60,7 +60,6 @@ cp config.example.json config.json
 }
 ```
 
-> **注意**：`config.json` 文件包含敏感信息，请勿提交到版本控制系统
 
 ## 使用方法
 
@@ -106,7 +105,7 @@ python api_cost_monitor.py
 刷新:240s
 ```
 
-## 常见问题
+## FAQ
 
 ### 登录失败怎么办？
 
